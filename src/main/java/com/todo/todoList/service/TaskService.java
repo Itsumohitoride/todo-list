@@ -1,7 +1,9 @@
 package com.todo.todoList.service;
 
 import com.todo.todoList.dto.TaskDTO;
+import org.springframework.stereotype.Service;
 
+@Service
 public class TaskService implements ITaskService{
     @Override
     public TaskDTO createTask(TaskDTO taskDTO) {

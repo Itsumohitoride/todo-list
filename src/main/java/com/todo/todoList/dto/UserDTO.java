@@ -1,7 +1,17 @@
 package com.todo.todoList.dto;
 
-public record UserDTO(
-    String firstName,
-    String lastName,
-    String email
-) { }
+import com.todo.todoList.model.enums.UniqueType;
+import com.todo.todoList.validator.annotation.UniqueField;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class UserDTO{
+    private String firstName;
+    private String lastName;
+    @UniqueField(type = UniqueType.EMAIL, message = "Email already exists")
+    private String email;
+    @UniqueField(type = UniqueType.NICKNAME, message = "Nickname already exists")
+    private String nickname;
+}
