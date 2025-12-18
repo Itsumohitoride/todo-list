@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.awt.Image;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
@@ -18,7 +19,7 @@ import java.util.List;
 public class User {
     @id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private Long  id;
+    private UUID id;
     private String firstName;
     private String lastName;
     private String email;

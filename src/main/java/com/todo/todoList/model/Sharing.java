@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
@@ -14,7 +15,7 @@ import java.util.List;
 public class Sharing {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private Long id;
+    private UUID id;
     @OneToOne
     private TodoList list;
     @OneToMany

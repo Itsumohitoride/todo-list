@@ -7,7 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
@@ -16,12 +17,12 @@ import java.time.LocalDateTime;
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private Long id;
+    private UUID id;
     private String description;
     private Status status;
     private TaskType type;
-    private LocalDateTime date;
-    private LocalDateTime completed;
+    private LocalDate date;
+    private LocalDate completed;
     @OneToOne
     private TodoList list;
 }
