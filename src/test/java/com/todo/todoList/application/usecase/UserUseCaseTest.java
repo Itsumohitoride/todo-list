@@ -1,5 +1,6 @@
 package com.todo.todoList.application.usecase;
 
+import com.todo.todoList.domain.enums.Role;
 import com.todo.todoList.domain.exception.DuplicateEntityException;
 import com.todo.todoList.domain.exception.EntityNotFoundException;
 import com.todo.todoList.domain.model.User;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -30,6 +33,9 @@ class UserUseCaseTest {
 
     @Mock
     private IUserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserUseCase userUseCase;
@@ -202,5 +208,85 @@ class UserUseCaseTest {
         assertThrows(EntityNotFoundException.class, () -> userUseCase.deleteUser(userId));
         verify(userRepository).existsById(userId);
         verify(userRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void testChangePassword_WithValidPassword_ShouldUpdatePassword() {
+        // Given
+        String currentPassword = "oldPassword123";
+        String newPassword = "newPassword456";
+        String encodedOldPassword = "$2a$10$encodedOldPassword";
+        testUser.setPassword(encodedOldPassword);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(currentPassword, encodedOldPassword)).thenReturn(true);
+        when(passwordEncoder.encode(newPassword)).thenReturn("$2a$10$encodedNewPassword");
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        userUseCase.changePassword(userId, currentPassword, newPassword);
+
+        // Then
+        verify(userRepository).findById(userId);
+        verify(passwordEncoder).matches(currentPassword, encodedOldPassword);
+        verify(passwordEncoder).encode(newPassword);
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void testChangePassword_WithIncorrectCurrentPassword_ShouldThrowException() {
+        // Given
+        String currentPassword = "wrongPassword";
+        String newPassword = "newPassword456";
+        String encodedOldPassword = "$2a$10$encodedOldPassword";
+        testUser.setPassword(encodedOldPassword);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(currentPassword, encodedOldPassword)).thenReturn(false);
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class,
+                () -> userUseCase.changePassword(userId, currentPassword, newPassword));
+        verify(userRepository).findById(userId);
+        verify(passwordEncoder).matches(currentPassword, encodedOldPassword);
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void testChangePassword_WithShortNewPassword_ShouldThrowException() {
+        // Given
+        String currentPassword = "oldPassword123";
+        String newPassword = "short";
+        String encodedOldPassword = "$2a$10$encodedOldPassword";
+        testUser.setPassword(encodedOldPassword);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(currentPassword, encodedOldPassword)).thenReturn(true);
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class,
+                () -> userUseCase.changePassword(userId, currentPassword, newPassword));
+        verify(userRepository).findById(userId);
+        verify(passwordEncoder).matches(currentPassword, encodedOldPassword);
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void testChangePassword_WithNonExistentUser_ShouldThrowException() {
+        // Given
+        String currentPassword = "oldPassword123";
+        String newPassword = "newPassword456";
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(EntityNotFoundException.class,
+                () -> userUseCase.changePassword(userId, currentPassword, newPassword));
+        verify(userRepository).findById(userId);
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any());
     }
 }
