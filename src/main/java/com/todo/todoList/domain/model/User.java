@@ -1,5 +1,6 @@
 package com.todo.todoList.domain.model;
 
+import com.todo.todoList.domain.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,9 @@ public class User {
     private String lastName;
     private String email;
     private String nickname;
+    private String password;
+    @Builder.Default
+    private Role role = Role.USER;
     private Image profilePicture;
     @Builder.Default
     private List<TodoList> lists = new ArrayList<>();

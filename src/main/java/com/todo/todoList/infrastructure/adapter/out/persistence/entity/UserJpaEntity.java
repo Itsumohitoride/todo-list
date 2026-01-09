@@ -1,5 +1,6 @@
 package com.todo.todoList.infrastructure.adapter.out.persistence.entity;
 
+import com.todo.todoList.domain.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,14 @@ public class UserJpaEntity {
 
     @Column(unique = true, nullable = false)
     private String nickname;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Role role = Role.USER;
 
     @Column(name = "profile_picture")
     private String profilePictureUrl;  // Changed from Image to String URL

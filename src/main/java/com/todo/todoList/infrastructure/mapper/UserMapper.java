@@ -22,6 +22,8 @@ public class UserMapper {
                 .lastName(entity.getLastName())
                 .email(entity.getEmail())
                 .nickname(entity.getNickname())
+                .password(entity.getPassword())
+                .role(entity.getRole())
                 // profilePicture mapping would go here if needed
                 .lists(entity.getLists() != null ?
                         entity.getLists().stream()
@@ -48,6 +50,8 @@ public class UserMapper {
                 .lastName(domain.getLastName())
                 .email(domain.getEmail())
                 .nickname(domain.getNickname())
+                .password(domain.getPassword())
+                .role(domain.getRole())
                 .profilePictureUrl(domain.getProfilePicture() != null ? "" : null) // Convert Image to URL string
                 .build();
     }
@@ -57,6 +61,8 @@ public class UserMapper {
         entity.setLastName(domain.getLastName());
         entity.setEmail(domain.getEmail());
         entity.setNickname(domain.getNickname());
+        entity.setRole(domain.getRole());
+        // Note: Password is not updated here for security reasons - use a separate method
     }
 
     /**
@@ -81,6 +87,8 @@ public class UserMapper {
                 .lastName(entity.getLastName())
                 .email(entity.getEmail())
                 .nickname(entity.getNickname())
+                .password(entity.getPassword())
+                .role(entity.getRole())
                 .build();
     }
 }
