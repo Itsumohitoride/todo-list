@@ -4,6 +4,12 @@ import com.todo.todoList.application.dto.TodoListDTO;
 import com.todo.todoList.domain.model.TodoList;
 import com.todo.todoList.domain.model.User;
 import com.todo.todoList.domain.port.in.IManageTodoListUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +26,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/lists")
+@Tag(name = "TodoLists", description = "TodoList management endpoints")
 public class TodoListController {
 
     private final IManageTodoListUseCase todoListUseCase;
@@ -28,6 +35,13 @@ public class TodoListController {
         this.todoListUseCase = todoListUseCase;
     }
 
+    @Operation(summary = "Create a new todo list", description = "Creates a new todo list for a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "TodoList created successfully",
+                    content = @Content(schema = @Schema(implementation = TodoListDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PostMapping
     public ResponseEntity<TodoListDTO> createTodoList(@Valid @RequestBody TodoListDTO todoListDTO) {
         TodoList todoList = toEntity(todoListDTO);
@@ -35,12 +49,22 @@ public class TodoListController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(created));
     }
 
+    @Operation(summary = "Get todo list by ID", description = "Retrieves a todo list by its unique identifier")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "TodoList found",
+                    content = @Content(schema = @Schema(implementation = TodoListDTO.class))),
+            @ApiResponse(responseCode = "404", description = "TodoList not found")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<TodoListDTO> getTodoListById(@PathVariable UUID id) {
         TodoList todoList = todoListUseCase.getTodoListById(id);
         return ResponseEntity.ok(toDTO(todoList));
     }
 
+    @Operation(summary = "Get todo lists", description = "Retrieves all todo lists or filters by user ID if provided")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "TodoLists retrieved successfully")
+    })
     @GetMapping
     public ResponseEntity<List<TodoListDTO>> getTodoLists(@RequestParam(required = false) UUID userId) {
         List<TodoList> todoLists;
@@ -58,6 +82,13 @@ public class TodoListController {
         return ResponseEntity.ok(todoListDTOs);
     }
 
+    @Operation(summary = "Update todo list", description = "Updates an existing todo list's information")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "TodoList updated successfully",
+                    content = @Content(schema = @Schema(implementation = TodoListDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "TodoList not found")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<TodoListDTO> updateTodoList(@PathVariable UUID id, @Valid @RequestBody TodoListDTO todoListDTO) {
         TodoList todoList = toEntity(todoListDTO);
@@ -65,12 +96,23 @@ public class TodoListController {
         return ResponseEntity.ok(toDTO(updated));
     }
 
+    @Operation(summary = "Change todo list color", description = "Updates the color of a todo list")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Color changed successfully",
+                    content = @Content(schema = @Schema(implementation = TodoListDTO.class))),
+            @ApiResponse(responseCode = "404", description = "TodoList not found")
+    })
     @PutMapping("/{id}/color")
     public ResponseEntity<TodoListDTO> changeColor(@PathVariable UUID id, @RequestBody ColorRequest colorRequest) {
         TodoList updated = todoListUseCase.changeColor(id, colorRequest.getColor());
         return ResponseEntity.ok(toDTO(updated));
     }
 
+    @Operation(summary = "Delete todo list", description = "Deletes a todo list by its unique identifier")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "TodoList deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "TodoList not found")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTodoList(@PathVariable UUID id) {
         todoListUseCase.deleteTodoList(id);
