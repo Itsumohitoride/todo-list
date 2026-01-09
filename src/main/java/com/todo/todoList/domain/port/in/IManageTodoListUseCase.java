@@ -16,4 +16,8 @@ public interface IManageTodoListUseCase {
     List<TodoList> getTodoListsByUserId(UUID userId);
     List<TodoList> getAllTodoLists();
     TodoList changeColor(UUID id, String color);
+
+    // Search methods
+    List<TodoList> searchByName(String searchTerm);
+    List<TodoList> searchByUserIdAndName(UUID userId, String searchTerm);
 }

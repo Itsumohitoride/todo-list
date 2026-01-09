@@ -1,6 +1,7 @@
 package com.todo.todoList.infrastructure.adapter.in.rest;
 
 import com.todo.todoList.application.dto.TaskDTO;
+import com.todo.todoList.domain.enums.Status;
 import com.todo.todoList.domain.model.Task;
 import com.todo.todoList.domain.model.TodoList;
 import com.todo.todoList.domain.port.in.IManageTaskUseCase;
@@ -11,10 +12,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -123,6 +126,91 @@ public class TaskController {
     public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
         taskUseCase.deleteTask(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ====================================
+    // Search and Filter Endpoints
+    // ====================================
+
+    @Operation(summary = "Search tasks by description",
+            description = "Searches all tasks by description (case-insensitive). Returns all tasks matching the search term.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid search term")
+    })
+    @GetMapping("/tasks/search")
+    public ResponseEntity<List<TaskDTO>> searchTasks(
+            @RequestParam(required = true) String description) {
+        List<Task> results = taskUseCase.searchByDescription(description);
+        return ResponseEntity.ok(results.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @Operation(summary = "Search tasks in a specific list by description",
+            description = "Searches tasks in a specific todo list by description (case-insensitive)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid search parameters"),
+            @ApiResponse(responseCode = "404", description = "TodoList not found")
+    })
+    @GetMapping("/lists/{listId}/tasks/search")
+    public ResponseEntity<List<TaskDTO>> searchListTasks(
+            @PathVariable UUID listId,
+            @RequestParam(required = true) String description) {
+        List<Task> results = taskUseCase.searchByTodoListIdAndDescription(listId, description);
+        return ResponseEntity.ok(results.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @Operation(summary = "Filter tasks by status",
+            description = "Filters tasks in a specific todo list by status (PENDING or COMPLETED)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Filter completed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid status or parameters"),
+            @ApiResponse(responseCode = "404", description = "TodoList not found")
+    })
+    @GetMapping("/lists/{listId}/tasks/filter/status")
+    public ResponseEntity<List<TaskDTO>> filterTasksByStatus(
+            @PathVariable UUID listId,
+            @RequestParam(required = true) Status status) {
+        List<Task> results = taskUseCase.filterByTodoListIdAndStatus(listId, status);
+        return ResponseEntity.ok(results.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @Operation(summary = "Filter tasks by date range",
+            description = "Filters tasks in a specific todo list by date range. Dates should be in ISO-8601 format (e.g., 2024-01-01)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Filter completed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid date range or parameters"),
+            @ApiResponse(responseCode = "404", description = "TodoList not found")
+    })
+    @GetMapping("/lists/{listId}/tasks/filter/date")
+    public ResponseEntity<List<TaskDTO>> filterTasksByDateRange(
+            @PathVariable UUID listId,
+            @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        List<Task> results = taskUseCase.filterByTodoListIdAndDateRange(listId, startDate, endDate);
+        return ResponseEntity.ok(results.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @Operation(summary = "Get overdue tasks",
+            description = "Retrieves all overdue tasks (PENDING status with date in the past) from a specific todo list")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Overdue tasks retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "TodoList not found")
+    })
+    @GetMapping("/lists/{listId}/tasks/overdue")
+    public ResponseEntity<List<TaskDTO>> getOverdueTasks(@PathVariable UUID listId) {
+        List<Task> results = taskUseCase.getOverdueTasks(listId);
+        return ResponseEntity.ok(results.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList()));
     }
 
     // ====================================

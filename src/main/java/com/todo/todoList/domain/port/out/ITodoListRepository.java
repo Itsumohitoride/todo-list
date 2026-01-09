@@ -17,4 +17,8 @@ public interface ITodoListRepository {
     List<TodoList> findByUserId(UUID userId);
     void deleteById(UUID id);
     boolean existsById(UUID id);
+
+    // Search methods
+    List<TodoList> searchByNameContaining(String searchTerm);
+    List<TodoList> searchByUserIdAndNameContaining(UUID userId, String searchTerm);
 }

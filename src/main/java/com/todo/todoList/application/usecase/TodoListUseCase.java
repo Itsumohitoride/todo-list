@@ -92,4 +92,26 @@ public class TodoListUseCase implements IManageTodoListUseCase {
         todoList.setColor(color);
         return todoListRepository.save(todoList);
     }
+
+    @Override
+    public List<TodoList> searchByName(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            throw new IllegalArgumentException("Search term cannot be empty");
+        }
+        return todoListRepository.searchByNameContaining(searchTerm);
+    }
+
+    @Override
+    public List<TodoList> searchByUserIdAndName(UUID userId, String searchTerm) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            throw new IllegalArgumentException("Search term cannot be empty");
+        }
+        if (!userRepository.existsById(userId)) {
+            throw new EntityNotFoundException("User", userId);
+        }
+        return todoListRepository.searchByUserIdAndNameContaining(userId, searchTerm);
+    }
 }

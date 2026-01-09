@@ -121,6 +121,42 @@ public class TodoListController {
     }
 
     // ====================================
+    // Search and Filter Endpoints
+    // ====================================
+
+    @Operation(summary = "Search todo lists by name",
+            description = "Searches all todo lists by name (case-insensitive). Returns all lists matching the search term.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid search term")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<List<TodoListDTO>> searchTodoLists(
+            @RequestParam(required = true) String name) {
+        List<TodoList> results = todoListUseCase.searchByName(name);
+        return ResponseEntity.ok(results.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @Operation(summary = "Search user's todo lists by name",
+            description = "Searches a specific user's todo lists by name (case-insensitive)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid search parameters"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @GetMapping("/search/user/{userId}")
+    public ResponseEntity<List<TodoListDTO>> searchUserTodoLists(
+            @PathVariable UUID userId,
+            @RequestParam(required = true) String name) {
+        List<TodoList> results = todoListUseCase.searchByUserIdAndName(userId, name);
+        return ResponseEntity.ok(results.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList()));
+    }
+
+    // ====================================
     // Private Helper Methods (DTO Mapping)
     // ====================================
 

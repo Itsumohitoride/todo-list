@@ -1,5 +1,6 @@
 package com.todo.todoList.application.usecase;
 
+import com.todo.todoList.domain.enums.Status;
 import com.todo.todoList.domain.enums.TaskType;
 import com.todo.todoList.domain.exception.EntityNotFoundException;
 import com.todo.todoList.domain.model.Task;
@@ -10,6 +11,7 @@ import com.todo.todoList.domain.port.out.ITodoListRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -100,5 +102,69 @@ public class TaskUseCase implements IManageTaskUseCase {
 
         task.markAsPending();
         return taskRepository.save(task);
+    }
+
+    @Override
+    public List<Task> searchByDescription(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            throw new IllegalArgumentException("Search term cannot be empty");
+        }
+        return taskRepository.searchByDescriptionContaining(searchTerm);
+    }
+
+    @Override
+    public List<Task> searchByTodoListIdAndDescription(UUID todoListId, String searchTerm) {
+        if (todoListId == null) {
+            throw new IllegalArgumentException("TodoList ID cannot be null");
+        }
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            throw new IllegalArgumentException("Search term cannot be empty");
+        }
+        if (!todoListRepository.existsById(todoListId)) {
+            throw new EntityNotFoundException("TodoList", todoListId);
+        }
+        return taskRepository.searchByTodoListIdAndDescriptionContaining(todoListId, searchTerm);
+    }
+
+    @Override
+    public List<Task> filterByTodoListIdAndStatus(UUID todoListId, Status status) {
+        if (todoListId == null) {
+            throw new IllegalArgumentException("TodoList ID cannot be null");
+        }
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+        if (!todoListRepository.existsById(todoListId)) {
+            throw new EntityNotFoundException("TodoList", todoListId);
+        }
+        return taskRepository.findByTodoListIdAndStatus(todoListId, status);
+    }
+
+    @Override
+    public List<Task> filterByTodoListIdAndDateRange(UUID todoListId, LocalDate startDate, LocalDate endDate) {
+        if (todoListId == null) {
+            throw new IllegalArgumentException("TodoList ID cannot be null");
+        }
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Start date and end date cannot be null");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date must be before or equal to end date");
+        }
+        if (!todoListRepository.existsById(todoListId)) {
+            throw new EntityNotFoundException("TodoList", todoListId);
+        }
+        return taskRepository.findByTodoListIdAndDateBetween(todoListId, startDate, endDate);
+    }
+
+    @Override
+    public List<Task> getOverdueTasks(UUID todoListId) {
+        if (todoListId == null) {
+            throw new IllegalArgumentException("TodoList ID cannot be null");
+        }
+        if (!todoListRepository.existsById(todoListId)) {
+            throw new EntityNotFoundException("TodoList", todoListId);
+        }
+        return taskRepository.findOverdueTasks(todoListId);
     }
 }

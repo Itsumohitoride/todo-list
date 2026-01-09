@@ -85,4 +85,18 @@ public class TodoListRepositoryAdapter implements ITodoListRepository {
     public boolean existsById(UUID id) {
         return jpaRepository.existsById(id);
     }
+
+    @Override
+    public List<TodoList> searchByNameContaining(String searchTerm) {
+        return jpaRepository.findByNameContainingIgnoreCase(searchTerm).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TodoList> searchByUserIdAndNameContaining(UUID userId, String searchTerm) {
+        return jpaRepository.findByUserIdAndNameContaining(userId, searchTerm).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }
