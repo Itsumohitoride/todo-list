@@ -38,6 +38,9 @@ public class TaskUseCase implements IManageTaskUseCase {
         // Set todo list
         task.setList(todoList);
 
+        // Initialize status as PENDING for new tasks
+        task.markAsPending();
+
         return taskRepository.save(task);
     }
 
