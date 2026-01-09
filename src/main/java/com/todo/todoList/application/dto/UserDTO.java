@@ -1,6 +1,7 @@
 package com.todo.todoList.application.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.todo.todoList.domain.enums.UniqueType;
 import com.todo.todoList.infrastructure.validation.annotation.UniqueField;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,6 +19,8 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "User Data Transfer Object")
 public class UserDTO{
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Schema(description = "User unique identifier (auto-generated)", accessMode = Schema.AccessMode.READ_ONLY)
     private UUID id;
 
     @NotBlank(message = "First name is required")

@@ -32,7 +32,8 @@ public class UserController {
         this.userUseCase = userUseCase;
     }
 
-    @Operation(summary = "Create a new user", description = "Creates a new user with the provided information")
+    @Operation(summary = "Create a new user",
+               description = "Creates a new user with the provided information. The 'id' field is auto-generated and cannot be provided in the request.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User created successfully",
                     content = @Content(schema = @Schema(implementation = UserDTO.class))),
@@ -141,7 +142,7 @@ public class UserController {
         if (dto == null) return null;
 
         return User.builder()
-                .id(dto.getId())
+                .id(dto.getId())  // Will be null for POST requests due to @JsonProperty(access = READ_ONLY)
                 .firstName(dto.getFirstName())
                 .lastName(dto.getLastName())
                 .email(dto.getEmail())

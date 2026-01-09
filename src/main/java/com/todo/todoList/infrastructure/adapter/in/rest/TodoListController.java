@@ -35,7 +35,8 @@ public class TodoListController {
         this.todoListUseCase = todoListUseCase;
     }
 
-    @Operation(summary = "Create a new todo list", description = "Creates a new todo list for a user")
+    @Operation(summary = "Create a new todo list",
+               description = "Creates a new todo list for a user. The 'id' field is auto-generated and cannot be provided in the request.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "TodoList created successfully",
                     content = @Content(schema = @Schema(implementation = TodoListDTO.class))),
@@ -146,7 +147,7 @@ public class TodoListController {
         }
 
         return TodoList.builder()
-                .id(dto.getId())
+                .id(dto.getId())  // Will be null for POST requests due to @JsonProperty(access = READ_ONLY)
                 .name(dto.getName())
                 .color(dto.getColor())
                 .listType(dto.getListType())
