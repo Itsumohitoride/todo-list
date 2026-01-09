@@ -13,4 +13,6 @@ import java.util.UUID;
 @Repository
 public interface SharingJpaRepository extends JpaRepository<SharingJpaEntity, UUID> {
     Optional<SharingJpaEntity> findByListId(UUID listId);
+    Optional<SharingJpaEntity> findByShareToken(String shareToken);
+    boolean existsByShareToken(String shareToken);
 }

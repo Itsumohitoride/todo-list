@@ -82,6 +82,12 @@ public class SharingRepositoryAdapter implements ISharingRepository {
     }
 
     @Override
+    public Optional<Sharing> findByShareToken(String shareToken) {
+        return jpaRepository.findByShareToken(shareToken)
+                .map(mapper::toDomain);
+    }
+
+    @Override
     public List<Sharing> findAll() {
         return jpaRepository.findAll().stream()
                 .map(mapper::toDomain)
@@ -96,5 +102,10 @@ public class SharingRepositoryAdapter implements ISharingRepository {
     @Override
     public boolean existsById(UUID id) {
         return jpaRepository.existsById(id);
+    }
+
+    @Override
+    public boolean existsByShareToken(String shareToken) {
+        return jpaRepository.existsByShareToken(shareToken);
     }
 }

@@ -1,5 +1,7 @@
 package com.todo.todoList.application.usecase;
 
+import com.todo.todoList.application.dto.SharingDTO;
+import com.todo.todoList.domain.exception.DuplicateEntityException;
 import com.todo.todoList.domain.exception.EntityNotFoundException;
 import com.todo.todoList.domain.model.Sharing;
 import com.todo.todoList.domain.model.TodoList;
@@ -14,8 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -49,12 +51,14 @@ class SharingUseCaseTest {
     private UUID listId;
     private UUID userId;
     private User testUser;
+    private String shareToken;
 
     @BeforeEach
     void setUp() {
         sharingId = UUID.randomUUID();
         listId = UUID.randomUUID();
         userId = UUID.randomUUID();
+        shareToken = UUID.randomUUID().toString();
 
         testUser = User.builder()
                 .id(userId)
@@ -72,23 +76,27 @@ class SharingUseCaseTest {
 
         testSharing = Sharing.builder()
                 .id(sharingId)
+                .shareToken(shareToken)
                 .list(testTodoList)
+                .createdAt(LocalDateTime.now())
                 .users(new ArrayList<>())
                 .build();
     }
 
     @Test
-    void testCreateSharing_WithValidSharing_ShouldReturnCreatedSharing() {
+    void testCreateSharing_WithValidList_ShouldReturnCreatedSharing() {
         // Given
         when(todoListRepository.findById(listId)).thenReturn(Optional.of(testTodoList));
+        when(sharingRepository.findByTodoListId(listId)).thenReturn(Optional.empty());
         when(sharingRepository.save(any(Sharing.class))).thenReturn(testSharing);
 
         // When
-        Sharing result = sharingUseCase.createSharing(listId);
+        SharingDTO result = sharingUseCase.createSharing(listId);
 
         // Then
         assertNotNull(result);
-        assertEquals(listId, result.getList().getId());
+        assertNotNull(result.getShareToken());
+        assertEquals(listId, result.getTodoListId());
         verify(todoListRepository).findById(listId);
         verify(sharingRepository).save(any(Sharing.class));
     }
@@ -105,16 +113,28 @@ class SharingUseCaseTest {
     }
 
     @Test
+    void testCreateSharing_WithExistingSharing_ShouldThrowException() {
+        // Given
+        when(todoListRepository.findById(listId)).thenReturn(Optional.of(testTodoList));
+        when(sharingRepository.findByTodoListId(listId)).thenReturn(Optional.of(testSharing));
+
+        // When & Then
+        assertThrows(DuplicateEntityException.class, () -> sharingUseCase.createSharing(listId));
+        verify(sharingRepository, never()).save(any());
+    }
+
+    @Test
     void testGetSharingById_WithExistingSharing_ShouldReturnSharing() {
         // Given
         when(sharingRepository.findById(sharingId)).thenReturn(Optional.of(testSharing));
 
         // When
-        Sharing result = sharingUseCase.getSharingById(sharingId);
+        SharingDTO result = sharingUseCase.getSharingById(sharingId);
 
         // Then
         assertNotNull(result);
         assertEquals(sharingId, result.getId());
+        assertEquals(shareToken, result.getShareToken());
         verify(sharingRepository).findById(sharingId);
     }
 
@@ -129,16 +149,40 @@ class SharingUseCaseTest {
     }
 
     @Test
+    void testGetSharingByToken_WithExistingToken_ShouldReturnSharing() {
+        // Given
+        when(sharingRepository.findByShareToken(shareToken)).thenReturn(Optional.of(testSharing));
+
+        // When
+        SharingDTO result = sharingUseCase.getSharingByToken(shareToken);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(shareToken, result.getShareToken());
+        verify(sharingRepository).findByShareToken(shareToken);
+    }
+
+    @Test
+    void testGetSharingByToken_WithNonExistentToken_ShouldThrowException() {
+        // Given
+        when(sharingRepository.findByShareToken(shareToken)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(EntityNotFoundException.class, () -> sharingUseCase.getSharingByToken(shareToken));
+        verify(sharingRepository).findByShareToken(shareToken);
+    }
+
+    @Test
     void testGetSharingByTodoListId_WithExistingSharing_ShouldReturnSharing() {
         // Given
         when(sharingRepository.findByTodoListId(listId)).thenReturn(Optional.of(testSharing));
 
         // When
-        Sharing result = sharingUseCase.getSharingByTodoListId(listId);
+        SharingDTO result = sharingUseCase.getSharingByTodoListId(listId);
 
         // Then
         assertNotNull(result);
-        assertEquals(listId, result.getList().getId());
+        assertEquals(listId, result.getTodoListId());
         verify(sharingRepository).findByTodoListId(listId);
     }
 
@@ -153,89 +197,95 @@ class SharingUseCaseTest {
     }
 
     @Test
-    void testGetAllSharings_ShouldReturnAllSharings() {
+    void testJoinSharedList_WithValidData_ShouldAddUser() {
         // Given
-        TodoList todoList2 = TodoList.builder()
-                .id(UUID.randomUUID())
-                .name("Test List 2")
-                .build();
-
-        Sharing sharing2 = Sharing.builder()
-                .id(UUID.randomUUID())
-                .list(todoList2)
-                .users(new ArrayList<>())
-                .build();
-
-        List<Sharing> sharings = Arrays.asList(testSharing, sharing2);
-        when(sharingRepository.findAll()).thenReturn(sharings);
-
-        // When
-        List<Sharing> result = sharingUseCase.getAllSharings();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(sharingRepository).findAll();
-    }
-
-    @Test
-    void testAddUserToSharing_WithValidData_ShouldAddUser() {
-        // Given
-        when(sharingRepository.findById(sharingId)).thenReturn(Optional.of(testSharing));
+        when(sharingRepository.findByShareToken(shareToken)).thenReturn(Optional.of(testSharing));
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
         when(sharingRepository.save(any(Sharing.class))).thenReturn(testSharing);
 
         // When
-        Sharing result = sharingUseCase.addUserToSharing(sharingId, userId);
+        SharingDTO result = sharingUseCase.joinSharedList(shareToken, userId);
 
         // Then
         assertNotNull(result);
-        verify(sharingRepository).findById(sharingId);
+        verify(sharingRepository).findByShareToken(shareToken);
         verify(userRepository).findById(userId);
         verify(sharingRepository).save(any(Sharing.class));
     }
 
     @Test
-    void testAddUserToSharing_WithNonExistentSharing_ShouldThrowException() {
+    void testJoinSharedList_WithNonExistentToken_ShouldThrowException() {
         // Given
-        when(sharingRepository.findById(sharingId)).thenReturn(Optional.empty());
+        when(sharingRepository.findByShareToken(shareToken)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(EntityNotFoundException.class, () -> sharingUseCase.addUserToSharing(sharingId, userId));
-        verify(sharingRepository).findById(sharingId);
+        assertThrows(EntityNotFoundException.class, () -> sharingUseCase.joinSharedList(shareToken, userId));
+        verify(sharingRepository).findByShareToken(shareToken);
         verify(userRepository, never()).findById(any());
-        verify(sharingRepository, never()).save(any());
     }
 
     @Test
-    void testAddUserToSharing_WithNonExistentUser_ShouldThrowException() {
+    void testJoinSharedList_WithNonExistentUser_ShouldThrowException() {
         // Given
-        when(sharingRepository.findById(sharingId)).thenReturn(Optional.of(testSharing));
+        when(sharingRepository.findByShareToken(shareToken)).thenReturn(Optional.of(testSharing));
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(EntityNotFoundException.class, () -> sharingUseCase.addUserToSharing(sharingId, userId));
-        verify(sharingRepository).findById(sharingId);
+        assertThrows(EntityNotFoundException.class, () -> sharingUseCase.joinSharedList(shareToken, userId));
         verify(userRepository).findById(userId);
         verify(sharingRepository, never()).save(any());
     }
 
     @Test
-    void testRemoveUserFromSharing_WithValidData_ShouldRemoveUser() {
+    void testJoinSharedList_WithDuplicateUser_ShouldThrowException() {
+        // Given
+        testSharing.addUser(testUser); // User already in sharing
+        when(sharingRepository.findByShareToken(shareToken)).thenReturn(Optional.of(testSharing));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+
+        // When & Then
+        assertThrows(DuplicateEntityException.class, () -> sharingUseCase.joinSharedList(shareToken, userId));
+        verify(sharingRepository, never()).save(any());
+    }
+
+    @Test
+    void testGetSharedUsers_WithExistingSharing_ShouldReturnUserIds() {
         // Given
         testSharing.addUser(testUser);
-        when(sharingRepository.findById(sharingId)).thenReturn(Optional.of(testSharing));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-        when(sharingRepository.save(any(Sharing.class))).thenReturn(testSharing);
+        when(sharingRepository.findByTodoListId(listId)).thenReturn(Optional.of(testSharing));
 
         // When
-        Sharing result = sharingUseCase.removeUserFromSharing(sharingId, userId);
+        List<UUID> result = sharingUseCase.getSharedUsers(listId);
 
         // Then
         assertNotNull(result);
-        verify(sharingRepository).findById(sharingId);
-        verify(userRepository).findById(userId);
-        verify(sharingRepository).save(any(Sharing.class));
+        assertEquals(1, result.size());
+        assertTrue(result.contains(userId));
+        verify(sharingRepository).findByTodoListId(listId);
+    }
+
+    @Test
+    void testGenerateQRCode_WithValidToken_ShouldReturnByteArray() {
+        // Given
+        when(sharingRepository.existsByShareToken(shareToken)).thenReturn(true);
+
+        // When
+        byte[] result = sharingUseCase.generateQRCode(shareToken, 300, 300);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.length > 0);
+        verify(sharingRepository).existsByShareToken(shareToken);
+    }
+
+    @Test
+    void testGenerateQRCode_WithNonExistentToken_ShouldThrowException() {
+        // Given
+        when(sharingRepository.existsByShareToken(shareToken)).thenReturn(false);
+
+        // When & Then
+        assertThrows(EntityNotFoundException.class, () -> sharingUseCase.generateQRCode(shareToken, 300, 300));
+        verify(sharingRepository).existsByShareToken(shareToken);
     }
 
     @Test

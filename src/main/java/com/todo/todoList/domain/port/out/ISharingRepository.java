@@ -14,7 +14,9 @@ public interface ISharingRepository {
     Sharing save(Sharing sharing);
     Optional<Sharing> findById(UUID id);
     Optional<Sharing> findByTodoListId(UUID todoListId);
+    Optional<Sharing> findByShareToken(String shareToken);
     List<Sharing> findAll();
     void deleteById(UUID id);
     boolean existsById(UUID id);
+    boolean existsByShareToken(String shareToken);
 }

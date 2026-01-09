@@ -21,6 +21,8 @@ public class SharingMapper {
 
         return Sharing.builder()
                 .id(entity.getId())
+                .shareToken(entity.getShareToken())
+                .createdAt(entity.getCreatedAt())
                 .list(entity.getList() != null ?
                         TodoList.builder()
                                 .id(entity.getList().getId())
@@ -48,6 +50,8 @@ public class SharingMapper {
 
         return SharingJpaEntity.builder()
                 .id(domain.getId())
+                .shareToken(domain.getShareToken())
+                .createdAt(domain.getCreatedAt())
                 .list(listEntity)
                 .build();
     }
