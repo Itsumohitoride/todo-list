@@ -2,6 +2,7 @@ package com.todo.todoList.application.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.todo.todoList.domain.enums.ListType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(description = "TodoList Data Transfer Object")
 public class TodoListDTO {
     private UUID id;
 

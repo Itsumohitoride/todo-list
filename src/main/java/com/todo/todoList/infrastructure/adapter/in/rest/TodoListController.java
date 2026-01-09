@@ -157,7 +157,9 @@ public class TodoListController {
     // Inner class for color change request
     @Getter
     @Setter
+    @Schema(description = "Request body for changing todo list color")
     public static class ColorRequest {
+        @Schema(description = "Hex color code", example = "#FF5733")
         private String color;
     }
 }

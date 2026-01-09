@@ -3,6 +3,7 @@ package com.todo.todoList.application.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.todo.todoList.domain.enums.UniqueType;
 import com.todo.todoList.infrastructure.validation.annotation.UniqueField;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(description = "User Data Transfer Object")
 public class UserDTO{
     private UUID id;
 
