@@ -203,6 +203,6 @@ class GlobalExceptionHandlerTest {
         assertEquals("Bad Request", response.getError());
         assertEquals("Validation failed", response.getMessage());
         assertEquals(1, response.getFieldErrors().size());
-        assertEquals("must not be blank", response.getErrors().get("email"));
+        assertEquals("must not be blank", response.getFieldErrors().get("email"));
     }
 }
