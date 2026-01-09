@@ -171,6 +171,7 @@ class TodoListUseCaseTest {
                 .build();
 
         List<TodoList> lists = Arrays.asList(testTodoList, list2);
+        when(userRepository.existsById(userId)).thenReturn(true);
         when(todoListRepository.findByUserId(userId)).thenReturn(lists);
 
         // When
@@ -179,7 +180,20 @@ class TodoListUseCaseTest {
         // Then
         assertNotNull(result);
         assertEquals(2, result.size());
+        verify(userRepository).existsById(userId);
         verify(todoListRepository).findByUserId(userId);
+    }
+
+    @Test
+    void testGetTodoListsByUserId_WithNonExistentUser_ShouldThrowException() {
+        // Given
+        UUID nonExistentUserId = UUID.randomUUID();
+        when(userRepository.existsById(nonExistentUserId)).thenReturn(false);
+
+        // When & Then
+        assertThrows(EntityNotFoundException.class, () -> todoListUseCase.getTodoListsByUserId(nonExistentUserId));
+        verify(userRepository).existsById(nonExistentUserId);
+        verify(todoListRepository, never()).findByUserId(any());
     }
 
     @Test
