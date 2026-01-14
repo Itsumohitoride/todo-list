@@ -355,12 +355,6 @@ todoList/
 - [ ] Integration with external calendars
 - [ ] Webhooks API
 
-## License
-
-Copyright (c) 2026. All rights reserved.
-
-This software and associated documentation files are proprietary and confidential. Unauthorized copying, distribution, modification, or use of this software, via any medium, is strictly prohibited without explicit written permission from the copyright holder.
-
 ## Contact
 
 For questions or suggestions, please open an issue in the repository.
